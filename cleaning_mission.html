@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Миссия: Весенняя уборка</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --green:#1D9E75;--green-l:#E1F5EE;--green-m:#5DCAA5;--green-d:#085041;
+  --amber:#BA7517;--amber-l:#FAEEDA;--amber-m:#EF9F27;
+  --coral:#D85A30;--coral-l:#FAECE7;--coral-m:#F0997B;
+  --red:#A32D2D;--red-l:#FCEBEB;
+  --purple:#534AB7;--purple-l:#EEEDFE;--purple-d:#26215C;
+  --blue:#185FA5;--blue-l:#E6F1FB;
+  --bg:#f0f3f1;--card:#fff;--bdr:rgba(0,0,0,0.08);
+  --text:#1a1a1a;--muted:#666;--faint:#aaa;
+  --r:16px;
+}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px;}
+
+/* INTRO SCREEN */
+.intro{position:fixed;inset:0;z-index:900;background:#0a1f14;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;}
+.intro.hide{display:none;}
+.intro-monster{font-size:72px;animation:shake 1.5s infinite;}
+@keyframes shake{0%,100%{transform:rotate(-6deg);}50%{transform:rotate(6deg);}}
+.intro-title{font-size:28px;font-weight:900;color:#fff;margin:16px 0 10px;line-height:1.2;}
+.intro-text{font-size:15px;color:rgba(255,255,255,.7);line-height:1.6;max-width:320px;margin:0 auto 28px;}
+.intro-btn{font-family:'Nunito',sans-serif;background:var(--green);color:#fff;border:none;border-radius:999px;padding:16px 40px;font-size:18px;font-weight:900;cursor:pointer;transition:transform .15s,background .15s;}
+.intro-btn:hover{background:var(--green-m);transform:scale(1.04);}
+.intro-btn:active{transform:scale(.97);}
+
+/* HERO */
+.hero{background:var(--green-d);color:#fff;padding:18px 20px 14px;text-align:center;}
+.hero-title{font-size:22px;font-weight:900;}
+.hero-sub{font-size:12px;opacity:.6;margin-top:3px;}
+
+/* STICKY LEVEL BAR */
+.level-strip{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--bdr);padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 3px 12px rgba(0,0,0,.12);}
+.lbadge{width:46px;height:46px;border-radius:50%;background:var(--green-l);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;border:3px solid transparent;transition:all .4s cubic-bezier(.34,1.56,.64,1);}
+.lbadge.pop{transform:scale(1.5);}
+.lv-info{flex:1;min-width:0;}
+.lv-row{display:flex;align-items:baseline;gap:8px;}
+.lv-name{font-size:16px;font-weight:900;transition:color .3s;}
+.lv-togo{font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap;}
+.lv-track{position:relative;height:8px;background:#eee;border-radius:999px;margin-top:5px;overflow:visible;}
+.lv-fill{height:100%;border-radius:999px;transition:width .5s cubic-bezier(.4,0,.2,1);position:relative;}
+.lv-fill::after{content:'';position:absolute;right:-1px;top:-2px;width:12px;height:12px;border-radius:50%;background:inherit;border:2px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.08);}
+.score-col{text-align:right;flex-shrink:0;}
+.score-n{font-size:30px;font-weight:900;color:var(--green);line-height:1;transition:transform .2s cubic-bezier(.34,1.56,.64,1);}
+.score-n.bump{transform:scale(1.4);}
+.score-lbl{font-size:10px;color:var(--muted);font-weight:700;}
+
+/* TOAST */
+.toast-area{height:0;position:relative;z-index:99;}
+.toast{max-width:400px;margin:0 auto;background:var(--green-d);color:#fff;font-size:13px;font-weight:800;padding:10px 18px;text-align:center;border-radius:0 0 12px 12px;transform:translateY(-100%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+.toast.show{transform:translateY(0);}
+
+/* TIMER */
+.timer-card{margin:12px 14px 0;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:11px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.tface{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;min-width:84px;}
+.tface.brk{color:var(--green);}
+.tface.hot{color:var(--coral);}
+.tdesc{font-size:11px;color:var(--muted);font-weight:700;}
+.bpill{font-size:10px;font-weight:800;padding:2px 8px;background:var(--amber-l);color:var(--amber);border-radius:999px;}
+.tbtns{margin-left:auto;display:flex;gap:6px;}
+.tbtn{font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;padding:6px 14px;border-radius:999px;border:none;cursor:pointer;transition:all .15s;}
+.tbtn.go{background:var(--green);color:#fff;}
+.tbtn.pause{background:var(--coral-l);color:var(--coral);}
+.tbtn.rst{background:#eee;color:var(--muted);}
+
+/* DIFFICULTY LEGEND */
+.legend{display:flex;gap:12px;align-items:center;padding:12px 14px 4px;flex-wrap:wrap;}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--muted);}
+.leg-dot{width:10px;height:10px;border-radius:50%;}
+
+/* ROOM */
+.rooms{padding:0 14px;}
+.room{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:14px;overflow:hidden;}
+.room.conquered{border-color:#5DCAA5;}
+
+/* BOSS BAR */
+.boss-bar{padding:12px 14px 10px;background:#1a0a0a;position:relative;overflow:hidden;}
+.boss-bar.dead{background:#0a1a0f;}
+.boss-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.boss-sprite{font-size:30px;transition:all .3s;display:inline-block;}
+.boss-sprite.hit{animation:bossHit .3s ease;}
+@keyframes bossHit{0%{transform:translateX(0);}25%{transform:translateX(-8px) scale(.9);}75%{transform:translateX(4px);}100%{transform:translateX(0) scale(1);}}
+.boss-sprite.dead-anim{animation:bossDie .6s ease forwards;}
+@keyframes bossDie{0%{transform:scale(1) rotate(0);}30%{transform:scale(1.3) rotate(-15deg);}60%{transform:scale(.5) rotate(30deg);opacity:.5;}100%{transform:scale(0) rotate(60deg);opacity:0;}}
+.boss-info{flex:1;min-width:0;}
+.boss-name{font-size:13px;font-weight:900;color:#fff;line-height:1;}
+.boss-hp-txt{font-size:11px;color:rgba(255,255,255,.55);margin-top:1px;}
+.boss-hp-track{height:10px;background:rgba(255,255,255,.1);border-radius:999px;overflow:hidden;position:relative;}
+.boss-hp-fill{height:100%;border-radius:999px;transition:width .4s cubic-bezier(.4,0,.2,1);position:relative;}
+.boss-hp-fill.high{background:#E24B4A;}
+.boss-hp-fill.mid{background:#EF9F27;}
+.boss-hp-fill.low{background:#5DCAA5;}
+.boss-dead-banner{display:none;text-align:center;padding:6px 0 2px;}
+.boss-dead-banner.show{display:block;}
+.boss-dead-txt{font-size:14px;font-weight:900;color:#5DCAA5;}
+
+/* ROOM HEADER */
+.rhead{padding:10px 14px;display:flex;align-items:center;gap:8px;border-top:1px solid var(--bdr);}
+.ricon{font-size:20px;width:26px;text-align:center;}
+.rlabel{font-size:14px;font-weight:900;flex:1;}
+.rprog-txt{font-size:11px;color:var(--muted);font-weight:700;}
+.rpts{font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;background:var(--green-l);color:var(--green-d);}
+.rpts.done{background:#eee;color:var(--muted);}
+
+/* TASKS */
+.trow{display:flex;align-items:flex-start;gap:10px;padding:9px 14px;cursor:pointer;transition:background .1s;border-top:.5px solid var(--bdr);}
+.trow:hover{background:#f7faf8;}
+.trow.isdone{background:var(--green-l);}
+.diff-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.diff-easy .diff-dot{background:#1D9E75;}
+.diff-normal .diff-dot{background:#EF9F27;}
+.diff-hard .diff-dot{background:#E24B4A;}
+.chkbox{width:20px;height:20px;border-radius:6px;flex-shrink:0;border:2px solid var(--bdr);background:var(--card);display:flex;align-items:center;justify-content:center;transition:all .2s cubic-bezier(.34,1.56,.64,1);margin-top:1px;font-size:11px;font-weight:900;color:transparent;}
+.chkbox.on{background:var(--green);border-color:var(--green);color:#fff;transform:scale(1.1);}
+.ttxt{font-size:13px;font-weight:700;line-height:1.4;flex:1;}
+.trow.isdone .ttxt{text-decoration:line-through;color:var(--muted);}
+.bonus-tag{display:inline-block;font-size:10px;font-weight:800;padding:1px 5px;border-radius:5px;background:var(--amber-l);color:var(--amber);margin-left:4px;vertical-align:middle;}
+.kids-tag{display:inline-block;font-size:10px;font-weight:800;padding:1px 5px;border-radius:5px;background:var(--purple-l);color:var(--purple-d);margin-left:4px;vertical-align:middle;}
+.hard-tag{display:inline-block;font-size:10px;font-weight:800;padding:1px 5px;border-radius:5px;background:var(--red-l);color:var(--red);margin-left:4px;vertical-align:middle;}
+
+/* BONUS */
+.bonus-wrap{padding:0 14px 10px;}
+.bonus-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;}
+.bcard-head{padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:.5px solid var(--bdr);}
+.bcard-lbl{font-size:14px;font-weight:900;flex:1;}
+
+/* REWARD */
+.reward-wrap{padding:0 14px 16px;}
+.reward-card{background:var(--green-l);border:1px solid #9FE1CB;border-radius:var(--r);padding:14px;text-align:center;}
+.reward-label{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--green-d);margin-bottom:7px;}
+.rinput{font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;text-align:center;border:2px solid #9FE1CB;border-radius:999px;padding:8px 18px;width:100%;background:#fff;color:var(--green-d);outline:none;}
+.rinput:focus{border-color:var(--green);}
+
+/* VICTORY */
+.victory{display:none;margin:0 14px 20px;background:var(--green-d);color:#fff;border-radius:var(--r);padding:22px 20px;text-align:center;}
+.victory.show{display:block;}
+.vtitle{font-size:22px;font-weight:900;margin-top:8px;}
+.vsub{font-size:13px;opacity:.8;margin-top:4px;}
+
+/* POPUP */
+.pop-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;}
+.pop-ov.show{display:flex;}
+.pop-box{background:var(--card);border-radius:var(--r);padding:28px 22px;max-width:300px;width:90%;text-align:center;animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.pop-icon{font-size:56px;display:block;margin-bottom:8px;}
+.pop-title{font-size:20px;font-weight:900;margin-bottom:5px;}
+.pop-text{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+.pop-btn{font-family:'Nunito',sans-serif;background:var(--green);color:#fff;border:none;border-radius:999px;padding:11px 26px;font-size:14px;font-weight:800;cursor:pointer;}
+.pop-btn:hover{background:var(--green-d);}
+
+/* FLOATING EMOJI */
+.femo{position:fixed;pointer-events:none;z-index:600;font-size:22px;animation:floatUp 1.1s ease forwards;}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-90px) scale(1.5);}}
+
+/* CONFETTI */
+.cp{position:fixed;border-radius:3px;pointer-events:none;z-index:700;animation:cfall linear forwards;}
+@keyframes cfall{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+/* BURST */
+@keyframes burst{0%{transform:scale(.3);opacity:1;}80%{transform:scale(1.9);opacity:.3;}100%{transform:scale(2.4);opacity:0;}}
+.bring{pointer-events:none;position:fixed;border-radius:50%;top:50%;left:50%;animation:burst .5s ease-out forwards;z-index:550;}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div class="intro" id="intro">
+  <div class="intro-monster">👾</div>
+  <div class="intro-title">В доме появились монстры грязи!</div>
+  <div class="intro-text">Каждая комната захвачена боссом. Выполняйте задания — снимайте им HP. Победите всех монстров и верните дому чистоту!</div>
+  <button class="intro-btn" onclick="startMission()">Начать миссию!</button>
+</div>
+
+<div class="hero">
+  <div class="hero-title">Миссия: Весенняя уборка 🧹</div>
+  <div class="hero-sub">Победи всех боссов — получи награду!</div>
+</div>
+
+<!-- STICKY LEVEL -->
+<div class="level-strip">
+  <div class="lbadge" id="lbadge">⭐</div>
+  <div class="lv-info">
+    <div class="lv-row">
+      <div class="lv-name" id="lname">Новичок</div>
+      <div class="lv-togo" id="ltogo">ещё 15 оч. до «Помощника»</div>
+    </div>
+    <div class="lv-track"><div class="lv-fill" id="lfill" style="width:0%"></div></div>
+  </div>
+  <div class="score-col">
+    <div class="score-n" id="score-n">0</div>
+    <div class="score-lbl">очков</div>
+  </div>
+</div>
+
+<div class="toast-area"><div class="toast" id="toast"></div></div>
+
+<!-- TIMER -->
+<div class="timer-card">
+  <div>
+    <div class="tface" id="tface">1:30:00</div>
+    <div class="tdesc" id="tdesc">до перерыва</div>
+  </div>
+  <span class="bpill" id="bpill">Перерывов: 0/3</span>
+  <div class="tbtns">
+    <button class="tbtn go" id="tbtn" onclick="toggleTimer()">▶ Старт</button>
+    <button class="tbtn rst" onclick="resetTimer()">↺</button>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot" style="background:#1D9E75"></div>Лёгкое (дети)</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#EF9F27"></div>Обычное</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#E24B4A"></div>Удар по боссу</div>
+</div>
+
+<!-- ROOMS -->
+<div class="rooms" id="rooms"></div>
+
+<!-- BONUS -->
+<div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:6px 14px 4px;">Дополнительные миссии</div>
+<div class="bonus-wrap"><div class="bonus-card">
+  <div class="bcard-head"><span style="font-size:18px;">🎮</span><span class="bcard-lbl">Бонусные задания</span></div>
+  <div id="bonus-card"></div>
+</div></div>
+
+<!-- VICTORY -->
+<div class="victory" id="victory">
+  <div style="font-size:44px;">🏆</div>
+  <div class="vtitle">Все монстры побеждены!</div>
+  <div class="vsub" id="vsub">Миссия выполнена — награда заслужена!</div>
+</div>
+
+<!-- REWARD -->
+<div class="reward-wrap">
+  <div class="reward-card">
+    <div class="reward-label">🏆 Награда за 100 очков</div>
+    <input class="rinput" id="rinput" type="text" value="Семейный кино-вечер с пиццей" placeholder="Введите приз...">
+  </div>
+</div>
+
+<!-- POPUP -->
+<div class="pop-ov" id="pop-ov" onclick="closePopup(event)">
+  <div class="pop-box">
+    <span class="pop-icon" id="pop-icon">🎉</span>
+    <div class="pop-title" id="pop-title"></div>
+    <div class="pop-text" id="pop-text"></div>
+    <button class="pop-btn" onclick="closePopup()">Продолжаем!</button>
+  </div>
+</div>
+
+<script>
+const LEVELS=[
+  {min:0,  max:15,  name:'Новичок',  icon:'⭐', clr:'#888780', fill:'#F1EFE8', bc:'#B4B2A9'},
+  {min:15, max:30,  name:'Помощник', icon:'🌱', clr:'#1D9E75', fill:'#E1F5EE', bc:'#5DCAA5'},
+  {min:30, max:50,  name:'Уборщик',  icon:'🧹', clr:'#185FA5', fill:'#E6F1FB', bc:'#85B7EB'},
+  {min:50, max:70,  name:'Профи',    icon:'⚡', clr:'#BA7517', fill:'#FAEEDA', bc:'#EF9F27'},
+  {min:70, max:90,  name:'Эксперт',  icon:'🔥', clr:'#D85A30', fill:'#FAECE7', bc:'#F0997B'},
+  {min:90, max:100, name:'Мастер',   icon:'👑', clr:'#534AB7', fill:'#EEEDFE', bc:'#AFA9EC'},
+  {min:100,max:999, name:'Чемпион',  icon:'🏆', clr:'#085041', fill:'#E1F5EE', bc:'#1D9E75'},
+];
+
+const ROOMS=[
+  {id:'kitchen',name:'Кухня',icon:'🍳',pts:20,
+   boss:{name:'Жировой Король',sprite:'🧟',hp:9},
+   tasks:[
+    {t:'Выбросить просроченные продукты',d:'easy',kids:true},
+    {t:'Протереть шкафы и фасады снаружи',d:'easy',kids:true},
+    {t:'Очистить плиту и вытяжку (пар + сода)',d:'hard'},
+    {t:'Протереть холодильник внутри',d:'normal'},
+    {t:'Протереть мелкую технику',d:'easy',kids:true},
+    {t:'Протереть ручки и выключатели',d:'easy',kids:true},
+    {t:'Подоконник и стёкла от зимней копоти',d:'normal'},
+    {t:'Помыть пол',d:'normal'},
+    {t:'Красиво разложить продукты по банкам',d:'easy',b:true,bp:5,kids:true},
+  ]},
+  {id:'living',name:'Гостиная',icon:'🛋',pts:15,
+   boss:{name:'Пылевой Дракон',sprite:'🐲',hp:9},
+   tasks:[
+    {t:'Люстры, картины, полки — папидастр',d:'easy',kids:true},
+    {t:'Убрать все вещи по местам',d:'easy',kids:true},
+    {t:'ТВ и техника — сухая микрофибра',d:'normal'},
+    {t:'Диван: чистка от шерсти кошки + пылесос',d:'hard'},
+    {t:'Окна и подоконники',d:'normal'},
+    {t:'Душ для цветов или протирка листьев',d:'easy',kids:true},
+    {t:'Помыть пол + запустить робота',d:'normal'},
+    {t:'Плинтусы влажной шваброй',d:'hard'},
+    {t:'Перестановка 2–3 вещей',d:'easy',b:true,bp:5,kids:true},
+  ]},
+  {id:'nursery',name:'Детская',icon:'🧸',pts:20,
+   boss:{name:'Хаос-Горыныч',sprite:'🦕',hp:9},
+   tasks:[
+    {t:'Операция «Лишнее» — игрушки на вырост',d:'easy',kids:true},
+    {t:'Рассортировать игрушки по зонам',d:'easy',kids:true},
+    {t:'Lego-ванна: мойка пластика в тазу',d:'easy',kids:true},
+    {t:'Протирка корешков книг папидастром',d:'easy',kids:true},
+    {t:'Пропылесосить матрас с двух сторон',d:'hard'},
+    {t:'Окна, батареи и подоконник',d:'normal'},
+    {t:'Новые стикеры-маркировки на ящики',d:'easy',kids:true},
+    {t:'Помыть пол',d:'normal'},
+    {t:'«Коробка радости» с 3 любимыми игрушками',d:'easy',b:true,bp:5,kids:true},
+  ]},
+  {id:'bedroom',name:'Спальня',icon:'🛏',pts:15,
+   boss:{name:'Пылевой Вампир',sprite:'🧛',hp:9},
+   tasks:[
+    {t:'Зимние вещи в вакуумные пакеты',d:'hard'},
+    {t:'Протирка полок шкафа',d:'normal'},
+    {t:'Смена белья + пылесос матраса',d:'hard'},
+    {t:'Зеркала без разводов',d:'normal'},
+    {t:'Плафоны и люстры',d:'normal'},
+    {t:'Решётки вентиляции и кондиционера',d:'hard'},
+    {t:'Протереть подоконники',d:'easy'},
+    {t:'Помыть пол',d:'normal'},
+    {t:'Саше с ароматом лаванды',d:'easy',b:true,bp:5},
+  ]},
+  {id:'office',name:'Кабинет',icon:'💻',pts:15,
+   boss:{name:'Байт-Злодей',sprite:'🤖',hp:8},
+   tasks:[
+    {t:'Разбор квитанций и старых бумаг',d:'normal'},
+    {t:'Полная очистка поверхности стола',d:'normal'},
+    {t:'Клавиатура (продувка) и монитор',d:'hard'},
+    {t:'Кресло: липкий ролик от шерсти',d:'normal'},
+    {t:'Выкинуть засохшие маркеры',d:'easy',kids:true},
+    {t:'Пыль за принтером и роутером',d:'hard'},
+    {t:'Влажная уборка под столом',d:'normal'},
+    {t:'Зона фокуса: один предмет на столе',d:'easy',b:true,bp:5},
+  ]},
+  {id:'bathroom',name:'Ванная',icon:'🛁',pts:15,
+   boss:{name:'Плесень-Волшебник',sprite:'🧙',hp:9},
+   tasks:[
+    {t:'Протереть зеркало',d:'easy'},
+    {t:'Почистить ванну / душ',d:'hard'},
+    {t:'Почистить раковину и смеситель',d:'normal'},
+    {t:'Разобрать косметику',d:'easy'},
+    {t:'Помыть кошачий лоток',d:'hard'},
+    {t:'Заменить полотенца',d:'easy'},
+    {t:'Помыть пол',d:'normal'},
+    {t:'Протереть шкафчики снаружи',d:'easy',kids:true},
+    {t:'Прочистить слив',d:'hard',b:true,bp:5},
+  ]},
+];
+
+const BONUS=[
+  {t:'Найти 10 лишних вещей и вынести',pts:3,kids:true},
+  {t:'Собрать всё с пола перед роботом',pts:3,kids:true},
+  {t:'Выполнить комнату без отвлечений',pts:5},
+  {t:'Выполнить «босс-задачу»',pts:10},
+];
+
+const DIFF_PTS={easy:1,normal:2,hard:4};
+const DIFF_CLASS={easy:'diff-easy',normal:'diff-normal',hard:'diff-hard'};
+
+let st={
+  tasks:{},bonus:{},
+  tsecs:5400,bsecs:900,isBreak:false,breaks:0,running:false,iv:null,
+  prevLv:0,milestones:{},shownLv:new Set(),
+  deadRooms:new Set(),
+};
+
+function startMission(){document.getElementById('intro').classList.add('hide');}
+
+function totalScore(){
+  let s=0;
+  Object.values(st.tasks).forEach(v=>s+=v);
+  Object.values(st.bonus).forEach(v=>s+=v);
+  return s;
+}
+
+function taskPts(task){
+  if(task.b)return task.bp||5;
+  return DIFF_PTS[task.d]||2;
+}
+
+function getLv(s){for(let i=LEVELS.length-1;i>=0;i--){if(s>=LEVELS[i].min)return i;}return 0;}
+
+function renderScore(anim){
+  const s=totalScore();
+  const el=document.getElementById('score-n');
+  el.textContent=s;
+  if(anim){el.classList.add('bump');setTimeout(()=>el.classList.remove('bump'),300);}
+
+  const li=getLv(s);const lv=LEVELS[li];
+  const badge=document.getElementById('lbadge');
+  badge.textContent=lv.icon;badge.style.background=lv.fill;badge.style.borderColor=lv.bc;
+  const ln=document.getElementById('lname');ln.textContent=lv.name;ln.style.color=lv.clr;
+  const lf=document.getElementById('lfill');lf.style.background=lv.clr;
+
+  const maxLv=li>=LEVELS.length-1;
+  const pct=maxLv?100:Math.round((s-lv.min)/(lv.max-lv.min)*100);
+  lf.style.width=pct+'%';
+
+  const togo=document.getElementById('ltogo');
+  togo.textContent=maxLv?'Максимальный уровень!':`ещё ${lv.max-s} оч. до «${LEVELS[li+1].name}»`;
+
+  if(li!==st.prevLv){
+    badge.classList.add('pop');setTimeout(()=>badge.classList.remove('pop'),500);
+    st.prevLv=li;
+    if(li>0&&!st.shownLv.has(li)){
+      st.shownLv.add(li);
+      showPopup(lv.icon,'Новый уровень: '+lv.name+'!','Вы становитесь сильнее — монстры дрожат от страха!','large');
+    }
+  }
+
+  checkMilestones(s);
+  if(s>=100){document.getElementById('victory').classList.add('show');updateVsub();}
+}
+
+function checkMilestones(s){
+  const mls={25:'25 очков — монстры напуганы!',50:'Половина пути — дом светлеет!',75:'75 очков — финальная битва!',100:'100 ОЧКОВ — ВСЕ МОНСТРЫ ПОБЕЖДЕНЫ! 🏆'};
+  for(const[p,m]of Object.entries(mls)){if(s>=+p&&!st.milestones[p]){st.milestones[p]=1;toast(m);}}
+}
+
+let _tt;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);}
+
+function floatEmoji(emoji,size){
+  const e=document.createElement('div');e.className='femo';
+  e.textContent=emoji;
+  e.style.cssText=`left:${20+Math.random()*60}%;top:${30+Math.random()*30}%;font-size:${size}px;`;
+  document.body.appendChild(e);setTimeout(()=>e.remove(),1200);
+}
+
+function burst(color){
+  const b=document.createElement('div');b.className='bring';
+  const sz=60;
+  b.style.cssText=`width:${sz}px;height:${sz}px;margin:-${sz/2}px;border:5px solid ${color||'#5DCAA5'};`;
+  document.body.appendChild(b);setTimeout(()=>b.remove(),650);
+}
+
+function confetti(count=50){
+  const c=['#1D9E75','#534AB7','#D85A30','#BA7517','#378ADD','#D4537E','#5DCAA5'];
+  for(let i=0;i<count;i++){
+    const p=document.createElement('div');p.className='cp';
+    const sz=6+Math.random()*8;
+    p.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}vw;top:-14px;background:${c[~~(Math.random()*c.length)]};transform:rotate(${Math.random()*360}deg);animation-duration:${1.3+Math.random()*1.5}s;animation-delay:${Math.random()*0.5}s`;
+    document.body.appendChild(p);setTimeout(()=>p.remove(),3500);
+  }
+}
+
+function showPopup(icon,title,text,size){
+  document.getElementById('pop-icon').textContent=icon;
+  document.getElementById('pop-title').textContent=title;
+  document.getElementById('pop-text').textContent=text;
+  document.getElementById('pop-ov').classList.add('show');
+  if(size==='large'){confetti(70);}
+  else if(size==='medium'){confetti(30);}
+}
+function closePopup(e){if(!e||e.target===document.getElementById('pop-ov'))document.getElementById('pop-ov').classList.remove('show');}
+
+function getRoomDone(room){
+  return room.tasks.filter((_,i)=>st.tasks[room.id+'_'+i]!==undefined).length;
+}
+
+function renderBossBar(room){
+  const total=room.boss.hp;
+  const done=getRoomDone(room);
+  const hpLeft=Math.max(0,total-done);
+  const hpPct=Math.round(hpLeft/total*100);
+  const isDead=hpLeft===0;
+  const fillClass=hpPct>60?'high':hpPct>25?'mid':'low';
+  return`<div class="boss-bar${isDead?' dead':''}" id="bbar-${room.id}">
+    <div class="boss-row">
+      <span class="boss-sprite" id="bsprite-${room.id}">${isDead?'💀':room.boss.sprite}</span>
+      <div class="boss-info">
+        <div class="boss-name">${room.boss.name}</div>
+        <div class="boss-hp-txt">${isDead?'ПОБЕЖДЁН':'HP: '+hpLeft+' / '+total}</div>
+      </div>
+    </div>
+    <div class="boss-hp-track">
+      <div class="boss-hp-fill ${fillClass}" style="width:${hpPct}%"></div>
+    </div>
+    <div class="boss-dead-banner${isDead?' show':''}">
+      <div class="boss-dead-txt">🎉 Босс побеждён! Комната очищена!</div>
+    </div>
+  </div>`;
+}
+
+function renderRooms(){
+  document.getElementById('rooms').innerHTML=ROOMS.map(room=>{
+    const total=room.tasks.length;
+    const done=getRoomDone(room);
+    const pct=total?Math.round(done/total*100):0;
+    const allDone=done===total;
+
+    const rows=room.tasks.map((task,i)=>{
+      const key=room.id+'_'+i;
+      const chk=st.tasks[key]!==undefined;
+      const dc=DIFF_CLASS[task.d]||'diff-normal';
+      return`<div class="trow ${dc}${chk?' isdone':''}" onclick="toggleTask('${room.id}',${i})">
+        <div class="diff-dot"></div>
+        <div class="chkbox${chk?' on':''}">${chk?'✓':''}</div>
+        <div class="ttxt">${task.t}${task.b?`<span class="bonus-tag">+${task.bp} бонус</span>`:''}${task.kids?'<span class="kids-tag">👦 дети</span>':''}${task.d==='hard'?'<span class="hard-tag">💥 удар</span>':''}</div>
+      </div>`;
+    }).join('');
+
+    return`<div class="room${allDone?' conquered':''}" id="room-${room.id}">
+      ${renderBossBar(room)}
+      <div class="rhead">
+        <span class="ricon">${room.icon}</span>
+        <span class="rlabel">${room.name}</span>
+        <span class="rprog-txt">${done}/${total}</span>
+        <span class="rpts${allDone?' done':''}">${room.pts} оч.</span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+function animateBossHit(roomId){
+  const sprite=document.getElementById('bsprite-'+roomId);
+  if(!sprite)return;
+  sprite.classList.remove('hit','dead-anim');
+  void sprite.offsetWidth;
+  sprite.classList.add('hit');
+  setTimeout(()=>sprite.classList.remove('hit'),350);
+}
+
+function animateBossDie(roomId){
+  const sprite=document.getElementById('bsprite-'+roomId);
+  if(!sprite)return;
+  sprite.classList.remove('hit');
+  void sprite.offsetWidth;
+  sprite.classList.add('dead-anim');
+}
+
+function toggleTask(roomId,idx){
+  const key=roomId+'_'+idx;
+  const room=ROOMS.find(r=>r.id===roomId);
+  const task=room.tasks[idx];
+  const pts=taskPts(task);
+  const wasChecked=st.tasks[key]!==undefined;
+
+  if(wasChecked){
+    delete st.tasks[key];
+  } else {
+    st.tasks[key]=pts;
+    floatEmoji('🎉',24);
+    burst('#1D9E75');
+    toast('+'+pts+' очков!');
+  }
+
+  const doneBefore=wasChecked?getRoomDone(room)+1:getRoomDone(room)-1;
+  const doneNow=getRoomDone(room);
+  const wasAllDone=doneBefore===room.tasks.length;
+  const isAllDone=doneNow===room.tasks.length;
+
+  if(!wasChecked){
+    if(isAllDone&&!wasAllDone){
+      setTimeout(()=>{
+        animateBossDie(roomId);
+        setTimeout(()=>{
+          renderRooms();
+          confetti(40);
+          floatEmoji('🎊',40);
+          showPopup('💀',room.boss.name+' побеждён!','Комната «'+room.name+'» очищена от монстра!','medium');
+        },700);
+      },200);
+      renderScore(true);
+      return;
+    } else {
+      animateBossHit(roomId);
+    }
+  }
+
+  renderRooms();
+  renderScore(true);
+}
+
+function renderBonus(){
+  document.getElementById('bonus-card').innerHTML=BONUS.map((b,i)=>{
+    const chk=st.bonus[i]!==undefined;
+    return`<div class="trow diff-normal${chk?' isdone':''}" onclick="toggleBonus(${i})">
+      <div class="diff-dot"></div>
+      <div class="chkbox${chk?' on':''}">${chk?'✓':''}</div>
+      <div class="ttxt">${b.t}<span class="bonus-tag">+${b.pts}</span>${b.kids?'<span class="kids-tag">👦 дети</span>':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleBonus(i){
+  if(st.bonus[i]!==undefined){delete st.bonus[i];}
+  else{st.bonus[i]=BONUS[i].pts;burst('#BA7517');floatEmoji('⭐',28);toast('+'+BONUS[i].pts+' бонусных очков!');}
+  renderBonus();renderScore(true);
+}
+
+function updateVsub(){
+  const r=document.getElementById('rinput').value||'ваш приз';
+  document.getElementById('vsub').textContent='Ваша награда: '+r+' 🎉';
+}
+
+function fmtT(s){
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;
+  if(h>0)return h+':'+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+  return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+}
+function renderTimer(){
+  const f=document.getElementById('tface'),d=document.getElementById('tdesc');
+  f.textContent=fmtT(st.tsecs);f.className='tface';
+  if(st.isBreak){f.classList.add('brk');d.textContent='перерыв — отдыхайте!';}
+  else if(st.tsecs<300){f.classList.add('hot');d.textContent='скоро перерыв!';}
+  else d.textContent='до перерыва';
+  document.getElementById('bpill').textContent='Перерывов: '+st.breaks+'/3';
+}
+function toggleTimer(){
+  const btn=document.getElementById('tbtn');
+  if(st.running){clearInterval(st.iv);st.running=false;btn.textContent='▶ Продолжить';btn.className='tbtn go';}
+  else{
+    st.running=true;btn.textContent='⏸ Пауза';btn.className='tbtn pause';
+    st.iv=setInterval(()=>{
+      st.tsecs--;
+      if(st.tsecs<=0){
+        if(!st.isBreak){st.isBreak=true;st.breaks++;st.tsecs=st.bsecs;toast('Перерыв '+st.breaks+'/3 — 15 минут отдыха!');}
+        else{st.isBreak=false;st.tsecs=5400;toast('Отдохнули? Продолжаем!');}
+      }
+      renderTimer();
+    },1000);
+  }
+}
+function resetTimer(){
+  clearInterval(st.iv);st.running=false;st.isBreak=false;st.tsecs=5400;
+  document.getElementById('tbtn').textContent='▶ Старт';
+  document.getElementById('tbtn').className='tbtn go';
+  renderTimer();
+}
+
+renderRooms();renderBonus();renderScore(false);renderTimer();
+</script>
+</body>
+</html>
